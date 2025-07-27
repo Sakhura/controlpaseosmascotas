@@ -7,6 +7,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -84,7 +86,7 @@ fun AplicacionPaseosMascotas() {
             Spacer(modifier = Modifier.height(16.dp))
 
             if (mostrandoFormulario) {
-                // Mostrar formulario para agregar nuevo paseo
+                // Mostrar formulario para agregar nuevo paseo (CON SCROLL)
                 FormularioNuevoPaseo(viewModel) {
                     mostrandoFormulario = false
                 }
@@ -173,7 +175,7 @@ fun EstadisticasCard(viewModel: ModeloVistaPaseos) {
     }
 }
 
-// Formulario para agregar un nuevo paseo
+// Formulario para agregar un nuevo paseo (CON SCROLL)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FormularioNuevoPaseo(
@@ -192,12 +194,15 @@ fun FormularioNuevoPaseo(
     var expandedTipoMascota by remember { mutableStateOf(false) }
     val tiposMascotas = listOf("Perro", "Gato", "Conejo", "Otro")
 
+    // ¡CLAVE! Agregar scroll al formulario
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()) // ¡ESTO PERMITE SCROLL!
         ) {
             Text(
                 text = "➕ Nuevo Paseo",
@@ -285,19 +290,25 @@ fun FormularioNuevoPaseo(
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Mostrar cálculo automático del total
             if (duracionHoras.isNotEmpty() && tarifaPorHora.isNotEmpty()) {
                 val total = viewModel.calcularMontoTotal()
-                Text(
-                    text = "💰 Total: ${formatearDinero(total)}",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Text(
+                        text = "💰 Total: ${formatearDinero(total)}",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
             }
 
             // Campo: Notas adicionales
@@ -305,23 +316,43 @@ fun FormularioNuevoPaseo(
                 value = notas,
                 onValueChange = viewModel::actualizarNotas,
                 label = { Text("📝 Notas (opcional)") },
+                placeholder = { Text("Ej: Paseo por el parque, muy activo") },
                 modifier = Modifier.fillMaxWidth(),
-                maxLines = 3
+                minLines = 2,
+                maxLines = 4
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Botón para guardar el paseo
+            // ¡BOTÓN PARA GUARDAR EL PASEO!
             Button(
                 onClick = {
                     viewModel.agregarPaseo()
                     onPaseoAgregado()
                 },
                 enabled = viewModel.formularioEsValido(),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp), // Más alto para ser más visible
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
             ) {
-                Text("💾 Guardar Paseo")
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "💾 Guardar Paseo",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
+                )
             }
+
+            // Espaciado adicional al final para que se vea bien
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }
