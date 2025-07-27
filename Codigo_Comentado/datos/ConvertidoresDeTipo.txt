@@ -1,0 +1,28 @@
+// Paquete donde se encuentra esta clase de convertidores de tipo
+package com.sakhura.controlpaseosmascotas.datos
+
+// Importación de anotación para indicar que es un convertidor de tipo
+import androidx.room.TypeConverter
+import java.util.Date
+
+// Clase que define funciones para convertir tipos que Room no sabe manejar directamente
+// En este caso, convertimos entre Date (fecha) y Long (número de milisegundos)
+// Esto es necesario porque SQLite no tiene un tipo de dato "Date", pero sí puede almacenar números (como timestamp)
+class ConvertidoresDeTipo {
+
+    // Convierte un valor Long (milisegundos desde 1970) a un objeto Date
+    // Room usará esta función al leer desde la base de datos
+    @TypeConverter
+    fun fromTimestamp(value: Long?): Date? {
+        // Si el valor no es nulo, se convierte a Date. Si es nulo, retorna null
+        return value?.let { Date(it) }
+    }
+
+    // Convierte un objeto Date a un valor Long (milisegundos desde 1970)
+    // Room usará esta función al guardar un objeto Date en la base de datos
+    @TypeConverter
+    fun dateToTimestamp(date: Date?): Long? {
+        // Si la fecha no es nula, se obtiene su tiempo en milisegundos. Si es nula, retorna null
+        return date?.time
+    }
+}

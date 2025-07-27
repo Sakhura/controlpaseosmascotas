@@ -1,0 +1,170 @@
+// Paquete donde se encuentra el ViewModel
+package com.sakhura.controlpaseosmascotas.modelovista
+
+// Importaciones necesarias para ViewModel, corrutinas y acceso a datos
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.sakhura.controlpaseosmascotas.datos.EntidadPaseoMascota
+import com.sakhura.controlpaseosmascotas.repositorio.RepositorioPaseosMascotas
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import java.util.Date
+
+// ViewModel que maneja la lógica y datos del módulo de paseos
+class ModeloVistaPaseos(private val repositorio: RepositorioPaseosMascotas) : ViewModel() {
+
+    // Estado que contiene la lista de paseos cargados desde la base de datos
+    private val _paseos = MutableStateFlow<List<EntidadPaseoMascota>>(emptyList())
+    val paseos: StateFlow<List<EntidadPaseoMascota>> = _paseos.asStateFlow()
+
+    // Estado con el total de dinero ganado (por paseos pagados)
+    private val _totalGanado = MutableStateFlow(0.0)
+    val totalGanado: StateFlow<Double> = _totalGanado.asStateFlow()
+
+    // Estado con el total de dinero pendiente (por paseos no pagados)
+    private val _totalPendiente = MutableStateFlow(0.0)
+    val totalPendiente: StateFlow<Double> = _totalPendiente.asStateFlow()
+
+    // Variables que representan los campos del formulario para crear un nuevo paseo
+    private val _nombreMascota = MutableStateFlow("")
+    val nombreMascota: StateFlow<String> = _nombreMascota.asStateFlow()
+
+    private val _tipoMascota = MutableStateFlow("Perro") // valor por defecto
+    val tipoMascota: StateFlow<String> = _tipoMascota.asStateFlow()
+
+    private val _nombreCliente = MutableStateFlow("")
+    val nombreCliente: StateFlow<String> = _nombreCliente.asStateFlow()
+
+    private val _duracionHoras = MutableStateFlow("")
+    val duracionHoras: StateFlow<String> = _duracionHoras.asStateFlow()
+
+    private val _tarifaPorHora = MutableStateFlow("")
+    val tarifaPorHora: StateFlow<String> = _tarifaPorHora.asStateFlow()
+
+    private val _notas = MutableStateFlow("")
+    val notas: StateFlow<String> = _notas.asStateFlow()
+
+    // Bloque que se ejecuta cuando el ViewModel es creado
+    init {
+        cargarDatos() // carga los datos iniciales
+    }
+
+    // Función que obtiene todos los datos desde la base de datos y actualiza los estados
+    private fun cargarDatos() {
+        // Cargar paseos
+        viewModelScope.launch {
+            repositorio.obtenerTodosLosPaseos().collect { listaPaseos ->
+                _paseos.value = listaPaseos
+            }
+        }
+
+        // Cargar total ganado (solo paseos pagados)
+        viewModelScope.launch {
+            repositorio.obtenerTotalGanado().collect { total ->
+                _totalGanado.value = total ?: 0.0
+            }
+        }
+
+        // Cargar total pendiente (solo paseos no pagados)
+        viewModelScope.launch {
+            repositorio.obtenerTotalPendiente().collect { total ->
+                _totalPendiente.value = total ?: 0.0
+            }
+        }
+    }
+
+    // Funciones para actualizar los valores del formulario (binding con la vista)
+    fun actualizarNombreMascota(nombre: String) {
+        _nombreMascota.value = nombre
+    }
+
+    fun actualizarTipoMascota(tipo: String) {
+        _tipoMascota.value = tipo
+    }
+
+    fun actualizarNombreCliente(nombre: String) {
+        _nombreCliente.value = nombre
+    }
+
+    fun actualizarDuracionHoras(duracion: String) {
+        _duracionHoras.value = duracion
+    }
+
+    fun actualizarTarifaPorHora(tarifa: String) {
+        _tarifaPorHora.value = tarifa
+    }
+
+    fun actualizarNotas(notas: String) {
+        _notas.value = notas
+    }
+
+    // Calcula el total a cobrar multiplicando horas por tarifa
+    fun calcularMontoTotal(): Double {
+        val horas = _duracionHoras.value.toDoubleOrNull() ?: 0.0
+        val tarifa = _tarifaPorHora.value.toDoubleOrNull() ?: 0.0
+        return horas * tarifa
+    }
+
+    // Agrega un nuevo paseo a la base de datos
+    fun agregarPaseo() {
+        viewModelScope.launch {
+            val horas = _duracionHoras.value.toDoubleOrNull() ?: 0.0
+            val tarifa = _tarifaPorHora.value.toDoubleOrNull() ?: 0.0
+            val total = horas * tarifa
+
+            // Se crea el objeto paseo con los datos actuales
+            val nuevoPaseo = EntidadPaseoMascota(
+                nombreMascota = _nombreMascota.value,
+                tipoMascota = _tipoMascota.value,
+                nombreCliente = _nombreCliente.value,
+                duracionHoras = horas,
+                tarifaPorHora = tarifa,
+                montoTotal = total,
+                estaPagado = false, // por defecto se guarda como no pagado
+                fecha = Date(), // fecha actual
+                notas = _notas.value
+            )
+
+            // Insertar en la base de datos
+            repositorio.agregarPaseo(nuevoPaseo)
+
+            // Limpiar formulario después de agregar
+            limpiarFormulario()
+        }
+    }
+
+    // Cambia el estado de pago de un paseo (pagado ↔ no pagado)
+    fun cambiarEstadoPago(paseo: EntidadPaseoMascota) {
+        viewModelScope.launch {
+            val paseoActualizado = paseo.copy(estaPagado = !paseo.estaPagado)
+            repositorio.actualizarPaseo(paseoActualizado)
+        }
+    }
+
+    // Elimina un paseo de la base de datos
+    fun eliminarPaseo(paseo: EntidadPaseoMascota) {
+        viewModelScope.launch {
+            repositorio.eliminarPaseo(paseo)
+        }
+    }
+
+    // Resetea todos los campos del formulario a su estado inicial
+    private fun limpiarFormulario() {
+        _nombreMascota.value = ""
+        _tipoMascota.value = "Perro"
+        _nombreCliente.value = ""
+        _duracionHoras.value = ""
+        _tarifaPorHora.value = ""
+        _notas.value = ""
+    }
+
+    // Verifica si los datos del formulario están completos y son válidos
+    fun formularioEsValido(): Boolean {
+        return _nombreMascota.value.isNotBlank() &&
+               _nombreCliente.value.isNotBlank() &&
+               _duracionHoras.value.toDoubleOrNull() != null &&
+               _tarifaPorHora.value.toDoubleOrNull() != null
+    }
+}

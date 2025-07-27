@@ -1,0 +1,85 @@
+plugins {
+    alias(libs.plugins.android.application)      // Plugin para aplicaciones Android
+    alias(libs.plugins.kotlin.android)           // Plugin para usar Kotlin en Android
+    alias(libs.plugins.kotlin.compose)           // Plugin para habilitar Jetpack Compose
+    id("kotlin-kapt")                            // Plugin necesario para usar anotaciones (como Room)
+}
+
+android {
+    namespace = "com.sakhura.controlpaseosmascotas"  // Nombre del paquete base (usado internamente por Compose y otros)
+    compileSdk = 35                                  // Versión de Android SDK para compilar la app
+
+    defaultConfig {
+        applicationId = "com.sakhura.controlpaseosmascotas"  // ID único de la app
+        minSdk = 24                                          // Versión mínima de Android que se soporta (Android 7.0)
+        targetSdk = 35                                       // Versión para la que se optimiza la app
+        versionCode = 1                                      // Código de versión para Google Play
+        versionName = "1.0"                                  // Nombre de versión visible al usuario
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"  // Para tests instrumentados
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false // No minimiza ni ofusca el código en modo release (útil solo si usas ProGuard/R8)
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro" // Reglas personalizadas si decides usar ProGuard
+            )
+        }
+    }
+
+    // Opciones de compatibilidad con Java
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    // Opciones específicas de Kotlin
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+
+    // Habilita Jetpack Compose en el proyecto
+    buildFeatures {
+        compose = true
+    }
+}
+
+dependencies {
+    // ===== DEPENDENCIAS ORIGINALES =====
+
+    implementation(libs.androidx.core.ktx)                  // Extensiones útiles de Kotlin para Android
+    implementation(libs.androidx.lifecycle.runtime.ktx)     // Corrutinas con ciclo de vida
+    implementation(libs.androidx.activity.compose)          // Soporte para Compose dentro de activities
+    implementation(platform(libs.androidx.compose.bom))     // Bill of Materials para mantener coherencia de versiones en Compose
+    implementation(libs.androidx.ui)                        // Componentes UI de Compose
+    implementation(libs.androidx.ui.graphics)               // Soporte para gráficos y colores
+    implementation(libs.androidx.ui.tooling.preview)        // Previsualización de UI en el IDE
+    implementation(libs.androidx.material3)                 // Material Design 3 con Compose
+
+    testImplementation(libs.junit)                          // Pruebas unitarias
+    androidTestImplementation(libs.androidx.junit)          // Pruebas instrumentadas con JUnit
+    androidTestImplementation(libs.androidx.espresso.core)  // Pruebas UI con Espresso
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+
+    debugImplementation(libs.androidx.ui.tooling)           // Herramientas de previsualización en modo debug
+    debugImplementation(libs.androidx.ui.test.manifest)     // Testeo de UI en entorno de pruebas
+
+    // ===== NUEVAS DEPENDENCIAS PARA ESTA APP =====
+
+    // ViewModel con Compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5")
+
+    // Room para base de datos local (versión 2.6.1)
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")     // Extensiones para usar corrutinas
+    kapt("androidx.room:room-compiler:2.6.1")          // Compilador de anotaciones (requiere el plugin kapt)
+
+    // Iconos extra de Material Design (por ejemplo, para botones o menú)
+    implementation("androidx.compose.material:material-icons-extended")
+
+    // Navegación con Compose (opcional, muy útil si usas varias pantallas)
+    implementation("androidx.navigation:navigation-compose:2.8.1")
+}

@@ -1,0 +1,44 @@
+// Paquete donde se encuentra esta entidad (tabla de la base de datos)
+package com.sakhura.controlpaseosmascotas.datos
+
+// Importaciones necesarias para Room y para manejar fechas
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import java.util.Date
+
+// Esta clase representa una tabla en la base de datos Room
+// Cada instancia de esta clase será una fila en la tabla "paseos_mascotas"
+@Entity(tableName = "paseos_mascotas")
+data class EntidadPaseoMascota(
+
+    // Clave primaria de la tabla. Se genera automáticamente (autoIncrement)
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0, // Identificador único para cada paseo
+
+    // Nombre de la mascota que fue paseada (ej: "Firulais")
+    val nombreMascota: String,
+
+    // Tipo de mascota (Perro, Gato, Conejo, Otro)
+    val tipoMascota: String,
+
+    // Nombre del cliente o dueño de la mascota
+    val nombreCliente: String,
+
+    // Duración del paseo en horas (por ejemplo, 1.5 horas)
+    val duracionHoras: Double,
+
+    // Tarifa que se cobra por cada hora de paseo
+    val tarifaPorHora: Double,
+
+    // Monto total a cobrar por ese paseo (duración × tarifa)
+    val montoTotal: Double,
+
+    // Indica si el paseo ya fue pagado o no (true = pagado, false = pendiente)
+    val estaPagado: Boolean,
+
+    // Fecha en la que se realizó el paseo (tipo Date, necesita convertidor)
+    val fecha: Date,
+
+    // Campo opcional para agregar notas o comentarios del paseo
+    val notas: String = ""
+)

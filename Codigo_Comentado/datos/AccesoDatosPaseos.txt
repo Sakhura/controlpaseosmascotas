@@ -1,0 +1,43 @@
+// Paquete donde se encuentra esta interfaz DAO (Data Access Object)
+package com.sakhura.controlpaseosmascotas.datos
+
+// Importación de anotaciones y herramientas necesarias para usar Room y corrutinas
+import androidx.room.*
+import kotlinx.coroutines.flow.Flow
+
+// Interfaz DAO que define cómo se accede a la base de datos de paseos
+@Dao
+interface AccesoDatosPaseos {
+
+    // Consulta para obtener todos los paseos registrados, ordenados por fecha descendente (más recientes primero)
+    @Query("SELECT * FROM paseos_mascotas ORDER BY fecha DESC")
+    fun obtenerTodosLosPaseos(): Flow<List<EntidadPaseoMascota>>
+
+    // Consulta para obtener los paseos que aún no han sido pagados (estaPagado = 0)
+    @Query("SELECT * FROM paseos_mascotas WHERE estaPagado = 0 ORDER BY fecha DESC")
+    fun obtenerPaseosPendientes(): Flow<List<EntidadPaseoMascota>>
+
+    // Consulta para obtener los paseos que ya han sido pagados (estaPagado = 1)
+    @Query("SELECT * FROM paseos_mascotas WHERE estaPagado = 1 ORDER BY fecha DESC")
+    fun obtenerPaseosPagados(): Flow<List<EntidadPaseoMascota>>
+
+    // Inserta un nuevo registro de paseo en la base de datos
+    @Insert
+    suspend fun insertarPaseo(paseo: EntidadPaseoMascota)
+
+    // Actualiza un paseo existente (por ejemplo, cambiar si está pagado o modificar datos)
+    @Update
+    suspend fun actualizarPaseo(paseo: EntidadPaseoMascota)
+
+    // Elimina un paseo específico de la base de datos
+    @Delete
+    suspend fun eliminarPaseo(paseo: EntidadPaseoMascota)
+
+    // Suma el total del dinero ganado por paseos ya pagados
+    @Query("SELECT SUM(montoTotal) FROM paseos_mascotas WHERE estaPagado = 1")
+    fun obtenerTotalGanado(): Flow<Double?>
+
+    // Suma el total del dinero que aún está pendiente por cobrar (paseos no pagados)
+    @Query("SELECT SUM(montoTotal) FROM paseos_mascotas WHERE estaPagado = 0")
+    fun obtenerTotalPendiente(): Flow<Double?>
+}

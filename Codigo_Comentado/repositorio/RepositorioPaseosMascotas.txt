@@ -1,0 +1,54 @@
+// Paquete donde se encuentra el repositorio
+package com.sakhura.controlpaseosmascotas.repositorio
+
+// Importación del DAO y de la entidad
+import com.sakhura.controlpaseosmascotas.datos.AccesoDatosPaseos
+import com.sakhura.controlpaseosmascotas.datos.EntidadPaseoMascota
+
+// Importación de Flow para trabajar con flujos de datos reactivos
+import kotlinx.coroutines.flow.Flow
+
+// Clase Repositorio: actúa como intermediario entre el ViewModel y el DAO (base de datos)
+// Aquí se centraliza toda la lógica relacionada con el acceso a datos
+class RepositorioPaseosMascotas(private val accesoDatosPaseos: AccesoDatosPaseos) {
+
+    // Función para obtener todos los paseos desde el DAO
+    fun obtenerTodosLosPaseos(): Flow<List<EntidadPaseoMascota>> {
+        return accesoDatosPaseos.obtenerTodosLosPaseos()
+    }
+
+    // Función para obtener solo los paseos que están pendientes de pago
+    fun obtenerPaseosPendientes(): Flow<List<EntidadPaseoMascota>> {
+        return accesoDatosPaseos.obtenerPaseosPendientes()
+    }
+
+    // Función para obtener solo los paseos que ya han sido pagados
+    fun obtenerPaseosPagados(): Flow<List<EntidadPaseoMascota>> {
+        return accesoDatosPaseos.obtenerPaseosPagados()
+    }
+
+    // Función para insertar un nuevo paseo en la base de datos
+    suspend fun agregarPaseo(paseo: EntidadPaseoMascota) {
+        accesoDatosPaseos.insertarPaseo(paseo)
+    }
+
+    // Función para actualizar un paseo existente (por ejemplo, marcar como pagado)
+    suspend fun actualizarPaseo(paseo: EntidadPaseoMascota) {
+        accesoDatosPaseos.actualizarPaseo(paseo)
+    }
+
+    // Función para eliminar un paseo de la base de datos
+    suspend fun eliminarPaseo(paseo: EntidadPaseoMascota) {
+        accesoDatosPaseos.eliminarPaseo(paseo)
+    }
+
+    // Función para obtener el total ganado (suma de montos de paseos pagados)
+    fun obtenerTotalGanado(): Flow<Double?> {
+        return accesoDatosPaseos.obtenerTotalGanado()
+    }
+
+    // Función para obtener el total pendiente (suma de montos de paseos no pagados)
+    fun obtenerTotalPendiente(): Flow<Double?> {
+        return accesoDatosPaseos.obtenerTotalPendiente()
+    }
+}

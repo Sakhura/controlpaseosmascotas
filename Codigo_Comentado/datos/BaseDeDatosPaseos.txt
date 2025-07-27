@@ -1,0 +1,49 @@
+// Paquete donde se encuentra esta clase que configura la base de datos
+package com.sakhura.controlpaseosmascotas.datos
+
+// Importación de componentes de Room y del sistema Android
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
+import android.content.Context
+
+// Anotación que indica que esta clase representa una base de datos de Room
+@Database(
+    entities = [EntidadPaseoMascota::class], // Lista de entidades (tablas). Aquí solo tenemos una: EntidadPaseoMascota
+    version = 1, // Versión de la base de datos. Se incrementa si se cambia la estructura
+    exportSchema = false // Indica si se quiere exportar el esquema de la BD como archivo JSON (útil en producción, pero aquí no se necesita)
+)
+@TypeConverters(ConvertidoresDeTipo::class) // Se especifica que se usarán convertidores personalizados, por ejemplo para convertir fechas
+abstract class BaseDeDatosPaseos : RoomDatabase() {
+
+    // Método abstracto que devuelve una instancia del DAO (interfaz con las operaciones de base de datos)
+    abstract fun accesoDatosPaseos(): AccesoDatosPaseos
+
+    // Objeto estático que gestiona la instancia única de la base de datos (patrón Singleton)
+    companion object {
+        // Volatile garantiza que los cambios en esta variable sean visibles para todos los hilos
+        @Volatile
+        private var INSTANCIA: BaseDeDatosPaseos? = null
+
+        /**
+         * Función para obtener la instancia de la base de datos.
+         * Si ya existe, la devuelve. Si no, la crea utilizando Room.
+         */
+        fun obtenerBaseDeDatos(context: Context): BaseDeDatosPaseos {
+            // Verificamos si la instancia ya existe; si no, la creamos de forma segura
+            return INSTANCIA ?: synchronized(this) {
+                // Creación de la instancia usando Room.databaseBuilder
+                val instancia = Room.databaseBuilder(
+                    context.applicationContext,              // Se usa applicationContext para evitar fugas de memoria
+                    BaseDeDatosPaseos::class.java,           // Clase de la base de datos (esta misma)
+                    "base_datos_paseos"                      // Nombre del archivo de base de datos que se generará
+                ).build()
+                // Se guarda la instancia para futuras llamadas
+                INSTANCIA = instancia
+                // Se retorna la instancia recién creada
+                instancia
+            }
+        }
+    }
+}
